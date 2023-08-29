@@ -6,13 +6,16 @@
     :style="{ height: visibleHeight + 'px' }"
     @scroll="onScroll"
   >
-    <!-- 容器内的占位，高度为总列表高度，用于形成滚动条 -->
+    <!-- 容器内的占位，用于形成滚动条 -->
     <div
       class="virtual-list-phantom"
       :style="{ height: totalHeight + 'px' }"
     ></div>
     <!-- 渲染区域 -->
-    <div class="virtual-list" :style="{ transform: getTransform }">
+    <div
+      class="virtual-list"
+      :style="{ transform: `translate3d(0, ${this.offset}px, 0)` }"
+    >
       <div
         ref="items"
         class="virtual-list-item"
@@ -27,77 +30,66 @@
 </template>
 
 <script>
+const PRE_LOAD_COUNT = 5;
 export default {
   name: "VirtualList",
   props: {
-    //所有列表数据
     totalData: {
       type: Array,
       default: () => [],
     },
-    //可视区域高度
     visibleHeight: {
       type: Number,
       default: 0,
     },
-    //每项高度
     itemHeight: {
       type: Number,
       default: 200,
     },
   },
   computed: {
-    //列表总高度
     totalHeight() {
       return this.totalData.length * this.itemHeight;
     },
-    // 每个条目的高度
     itemStyle() {
       return {
         height: this.itemHeight + "px",
         lineHeight: this.itemHeight + "px",
       };
     },
-    //可显示的列表项数
     visibleCount() {
       return Math.ceil(this.visibleHeight / this.itemHeight);
-    },
-    //偏移量对应的style
-    getTransform() {
-      return `translate3d(0, ${this.startIndexOffset}px, 0)`;
-    },
-    //获取真实显示列表数据
-    visibleData() {
-      return this.totalData.slice(
-        this.startIndex,
-        Math.min(this.endIndex, this.totalData.length)
-      );
     },
   },
   data() {
     return {
-      //偏移量
-      startIndexOffset: 0,
-      //起始索引
-      startIndex: 0,
-      //结束索引
-      endIndex: null,
+      offset: 0,
+      visibleData: [],
     };
   },
   mounted() {
-    this.startIndex = 0;
-    this.endIndex = this.startIndex + this.visibleCount;
+    this.getVisibleData();
   },
   methods: {
     onScroll() {
-      //当前滚动位置
+      // 顶部隐藏列表的高度
       const scrollTop = this.$refs.list.scrollTop;
-      //此时的开始索引
-      this.startIndex = Math.floor(scrollTop / this.itemHeight);
-      //此时的结束索引
-      this.endIndex = this.startIndex + this.visibleCount;
-      //此时的偏移量
-      this.startIndexOffset = scrollTop - (scrollTop % this.itemHeight);
+      this.getVisibleData(scrollTop);
+      this.getOffset(scrollTop);
+    },
+    // 更新列表数据
+    getVisibleData(scrollTop) {
+      scrollTop = scrollTop || 0;
+      let startIndex = Math.floor(scrollTop / this.itemHeight) - PRE_LOAD_COUNT;
+      startIndex = Math.max(startIndex, 0);
+      let endIndex = startIndex + this.visibleCount + PRE_LOAD_COUNT;
+      endIndex = Math.min(endIndex, this.totalData.length);
+      this.visibleData = this.totalData.slice(startIndex, endIndex);
+    },
+    // 更新列表位置，保证其一直在可视区
+    getOffset(scrollTop) {
+      scrollTop = scrollTop || 0;
+      this.offset = scrollTop - (scrollTop % this.itemHeight);
     },
   },
 };
