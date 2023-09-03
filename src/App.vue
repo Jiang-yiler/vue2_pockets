@@ -2,30 +2,38 @@
   <div id="app">
     <button @click="onClick">切换列表</button>
     <h1>{{ showVirtualList ? "Virtual List" : "Real List" }}</h1>
-    <VirtualList
-      :total-data="listData"
+    <DynamicHeight
+      :list-data="listData"
       :visible-height="500"
-      :item-height="50"
+      :estimated-item-height="50"
       v-if="showVirtualList"
-    />
+      v-slot="slotProps"
+    >
+      <ListItem :item="slotProps.item"></ListItem>
+    </DynamicHeight>
     <RealList :list-data="listData" v-else />
   </div>
 </template>
 
 <script>
-import VirtualList from "./components/LongList/VirtualList.vue";
+import { fakerListData } from "./faker";
+import DynamicHeight from "./components/LongList/VirtualList/DynamicHeight.vue";
 import RealList from "./components/LongList/RealList.vue";
+import ListItem from "./components/LongList/VirtualList/ListItem.vue";
 
-let data = [];
+let staticData = [];
 for (let i = 0; i < 100000; i++) {
-  data.push({ id: i, value: i });
+  staticData.push({ id: i, value: i });
 }
+
+const dynamicData = fakerListData();
 
 export default {
   name: "App",
   components: {
-    VirtualList,
+    DynamicHeight,
     RealList,
+    ListItem,
   },
   data() {
     return {
@@ -39,7 +47,10 @@ export default {
   methods: {
     getData() {
       let now = Date.now();
-      this.listData = data;
+      // 定高数据
+      // this.listData = staticData;
+      // 不定高数据
+      this.listData = dynamicData;
       console.log("JS运行时间：", Date.now() - now);
       setTimeout(() => {
         console.log("渲染时间：", Date.now() - now);

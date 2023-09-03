@@ -8,11 +8,13 @@
   >
     <!-- 容器内的占位，用于形成滚动条 -->
     <div
+      ref="phantom"
       class="virtual-list-phantom"
       :style="{ height: totalHeight + 'px' }"
     ></div>
     <!-- 渲染区域 -->
     <div
+      ref="content"
       class="virtual-list"
       :style="{ transform: `translate3d(0, ${this.offset}px, 0)` }"
     >
@@ -32,7 +34,7 @@
 <script>
 const PRE_LOAD_COUNT = 5;
 export default {
-  name: "VirtualList",
+  name: "StaticHeight",
   props: {
     totalData: {
       type: Array,

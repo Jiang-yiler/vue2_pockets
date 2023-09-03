@@ -10,6 +10,7 @@
         v-for="item in listData"
         :key="item.id"
       >
+        <span style="color: red">{{ item.id + 1 }}</span>
         {{ item.value }}
       </div>
     </div>
